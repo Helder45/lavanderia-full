@@ -1,33 +1,90 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useEffect, useState } from 'react';
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [input, setInput] = useState('');
+  const [tasks, setTasks] = useState([
+    'Caminhada',
+    'Estudar',
+    'Trabalhar',
+    'Descansar',
+  ]);
+  const [editTask, setEditTask] = useState({
+    enabled: false,
+    task: '',
+  });
+
+  function handleSaveEdit() {
+    const findIndexTask = tasks.findIndex((task) => task === editTask.task);
+    const allTasks = [...tasks];
+
+    allTasks[findIndexTask] = input;
+    setTasks(allTasks);
+
+    setEditTask({
+      enabled: false,
+      task: '',
+    });
+
+    setInput('');
+    localStorage.setItem('register', JSON.stringify(allTasks));
+  }
+
+  function handleEdit(item) {
+    setInput(item);
+    setEditTask({
+      enabled: true,
+      task: item,
+    });
+  }
+
+  function handleRegister() {
+    if (!input) {
+      return;
+    }
+
+    if (editTask.enabled) {
+      handleSaveEdit();
+      return;
+    }
+
+    setTasks((tarefas) => [...tarefas, input]);
+    setInput('');
+
+    localStorage.setItem('register', JSON.stringify([...tasks, input]));
+  }
+
+  function handleDelete(item) {
+    const removeTask = tasks.filter((task) => task !== item);
+    setTasks(removeTask);
+
+    localStorage.setItem('register', JSON.stringify(removeTask));
+  }
+
+  useEffect(() => {
+    const tarefasSalvas = localStorage.getItem('register');
+
+    if (tarefasSalvas) {
+      setTasks(JSON.parse(tarefasSalvas));
+    }
+  }, []);
 
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <h1>Lista de Tarefas</h1>
+
+      <button onClick={handleRegister}>
+        {editTask.enabled ? 'Alterar' : 'Adicionar'}
+      </button>
+
+      <hr />
+      {tasks.map((item) => (
+        <section key={item}>
+          <span>{item}</span>
+          <button onClick={() => handleDelete(item)}>Remover</button>
+          <button onClick={() => handleEdit(item)}>Editar</button>
+        </section>
+      ))}
     </>
   )
 }
