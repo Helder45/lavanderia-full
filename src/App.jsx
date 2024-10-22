@@ -1,92 +1,124 @@
-import { useEffect, useState } from 'react';
-import './App.css'
+import { useState } from 'react';
+// import { v4 as uuidv4 } from 'uuid';
+
+import './App.css';
 
 function App() {
-  const [input, setInput] = useState('');
-  const [tasks, setTasks] = useState([
-    'Caminhada',
-    'Estudar',
-    'Trabalhar',
-    'Descansar',
-  ]);
-  const [editTask, setEditTask] = useState({
+  const [contador, setContador] = useState(0);
+  const [client, setClient] = useState('');
+  const [servico, setServico] = useState('');
+  const [status, setStatus] = useState('');
+  const [pedidos, setPedidos] = useState([]);
+  const [editPedido, setEditPedido] = useState({
     enabled: false,
-    task: '',
+    pedido: null
   });
 
-  function handleSaveEdit() {
-    const findIndexTask = tasks.findIndex((task) => task === editTask.task);
-    const allTasks = [...tasks];
-
-    allTasks[findIndexTask] = input;
-    setTasks(allTasks);
-
-    setEditTask({
-      enabled: false,
-      task: '',
-    });
-
-    setInput('');
-    localStorage.setItem('register', JSON.stringify(allTasks));
+  function aumentarContador() {
+    setContador(contador + 1);
+    return contador;
   }
 
-  function handleEdit(item) {
-    setInput(item);
-    setEditTask({
+  function resetarFormulario() {
+    setClient('');
+    setServico('');
+    setStatus('pendente');
+    setEditPedido({
+      enabled: false,
+      pedido: null,
+    });
+  }
+
+  function handleSaveEdit(pedidoAtualizado) {
+    console.log("pedido atualizado", pedidoAtualizado.id);
+    pedidos.map(pedido => (console.log(pedido.id)
+    ))
+
+    const pedidosAtualizados = pedidos.map(pedido => (pedido.id == pedidoAtualizado.id ? pedidoAtualizado : pedido))
+    console.log("pedidos atualizados ", pedidosAtualizados);
+
+    setPedidos(pedidosAtualizados);
+    resetarFormulario();
+
+  }
+
+  function handleEdit(pedido) {
+    setClient(pedido.client);
+    setServico(pedido.servico);
+    setStatus(pedido.status);
+    setEditPedido({
       enabled: true,
-      task: item,
+      pedido
     });
   }
 
   function handleRegister() {
-    if (!input) {
+    if (!client || !servico) {
       return;
     }
 
-    if (editTask.enabled) {
-      handleSaveEdit();
+    const novoPedido = {
+      id: (editPedido.enabled ? editPedido.pedido.id : aumentarContador()),
+      client,
+      servico,
+      status
+    };
+
+    if (editPedido.enabled && editPedido.pedido) {
+      handleSaveEdit(novoPedido);
       return;
     }
 
-    setTasks((tarefas) => [...tarefas, input]);
-    setInput('');
+    const novosPedidos = [...pedidos, novoPedido];
+    setPedidos(novosPedidos);
+    resetarFormulario();
 
-    localStorage.setItem('register', JSON.stringify([...tasks, input]));
   }
 
-  function handleDelete(item) {
-    const removeTask = tasks.filter((task) => task !== item);
-    setTasks(removeTask);
+  function handleDelete(id) {
+    const removePedido = pedidos.filter((pedido) => pedido.id !== id);
+    setPedidos(removePedido);
 
-    localStorage.setItem('register', JSON.stringify(removeTask));
   }
-
-  useEffect(() => {
-    const tarefasSalvas = localStorage.getItem('register');
-
-    if (tarefasSalvas) {
-      setTasks(JSON.parse(tarefasSalvas));
-    }
-  }, []);
 
   return (
     <>
-      <h1>Lista de Tarefas</h1>
+      <h1>Lista de Pedidos</h1>
 
-      <button onClick={handleRegister}>
-        {editTask.enabled ? 'Alterar' : 'Adicionar'}
-      </button>
+      <div className='coluna'>
+        <input
+          type="text"
+          value={client}
+          onChange={(event) => setClient(event.target.value)}
+          placeholder="Digite o nome do cliente"
+        />
+        <input
+          type="text"
+          value={servico}
+          onChange={(event) => setServico(event.target.value)}
+          placeholder="Digite o tipo de serviço"
+        />
+        <select value={status} onChange={(event) => setStatus(event.target.value)}>
+          <option value="pendente">Pendente</option>
+          <option value="em andamento">Em Andamento</option>
+          <option value="concluído">Concluído</option>
+          {/* <option value="Encaminhado para entrega">Emcaminhado para entrega</option> */}
+        </select>
+        <button onClick={handleRegister}>
+          {editPedido.enabled ? 'Alterar Pedido' : 'Adicionar Pedido'}
+        </button>
+      </div>
 
       <hr />
-      {tasks.map((item) => (
-        <section key={item}>
-          <span>{item}</span>
-          <button onClick={() => handleDelete(item)}>Remover</button>
-          <button onClick={() => handleEdit(item)}>Editar</button>
+      {pedidos.map((pedido) => (
+        <section key={pedido.id}>
+          <span>{pedido.client}, {pedido.servico}, {pedido.status}</span>
+          <button onClick={() => handleDelete(pedido.id)}>Remover</button>
+          <button onClick={() => handleEdit(pedido)}>Editar</button>
         </section>
       ))}
     </>
-  )
+  );
 }
 
-export default App
+export default App;

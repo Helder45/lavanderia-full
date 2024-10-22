@@ -40,3 +40,9 @@
 .read-the-docs {
   color: #888;
 }
+
+.coluna {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
